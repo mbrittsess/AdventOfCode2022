@@ -29,7 +29,13 @@ package Stacks is
    function Strip_From_Top (S : in out Stack; N : Stack_Height ) return Crates
      with Pre => N <= Height(S);
    
+   function Grab_From_Top (S : in out Stack; N : Stack_Height ) return Crates
+     with Pre => N <= Height(S);
+   
    procedure Move_From_To ( S_From : in out Stack; N : Stack_Height ; S_To : in out Stack )
+     with Pre => N <= Height(S_From) and (N + Height(S_To)) <= Max_Height;
+   
+   procedure Move_All_From_To ( S_From : in out Stack; N : Stack_Height ; S_To : in out Stack )
      with Pre => N <= Height(S_From) and (N + Height(S_To)) <= Max_Height;
    
 private

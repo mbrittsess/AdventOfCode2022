@@ -43,9 +43,21 @@ package body Stacks is
       return Returned_Crates;
    end Strip_From_Top;
    
+   --Doesn't reverse order
+   function Grab_From_Top ( S : in out Stack; N : Stack_Height ) return Crates is
+   begin
+      S.Height := S.Height - N;
+      return S.Contents( S.Height+1 .. S.Height+N );
+   end Grab_From_Top;
+   
    procedure Move_From_To ( S_From : in out Stack; N : Stack_Height; S_To : in out Stack ) is
    begin
       Put_On_Top( S_To, Strip_From_Top( S_From, N ) );
    end Move_From_To;
+   
+   procedure Move_All_From_To ( S_From : in out Stack; N : Stack_Height; S_To : in out Stack ) is
+   begin
+      Put_On_Top( S_To, Grab_From_Top( S_From, N ) );
+   end Move_All_From_To;
 
 end Stacks;
