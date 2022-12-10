@@ -43,33 +43,6 @@ procedure Day9 is
       L => ( -1, 0 )
      );
 
-   type Eight_Positions is array( 1 .. 8 ) of Position;
-   function Adjacent_Positions ( P : Position ) return Eight_Positions is
-      Path : constant array( 1 .. 8 ) of Direction := ( U, R, D, D, L, L, U, U );
-      Ret : Eight_Positions;
-      New_Pos : Position := P;
-   begin
-      for I in Ret'Range loop
-         New_Pos := New_Pos + Offsets( Path( I ) );
-         Ret(I) := New_Pos;
-      end loop;
-      return Ret;
-   end Adjacent_Positions;
-
-   function Get_Both_Adjacent_Position ( A, B : Position ) return Position is
-      AdjA : Eight_Positions := Adjacent_Positions( A );
-      AdjB : Eight_Positions := Adjacent_Positions( B );
-   begin
-      for AI in Eight_Positions'Range loop
-         for BI in AI .. Eight_Positions'Last loop
-            if AdjA(AI) = AdjB(BI) then
-               return AdjA(AI);
-            end if;
-         end loop;
-      end loop;
-      raise Cant_Happen with To_String(A) & " " & To_String(B);
-   end Get_Both_Adjacent_Position;
-
    Head, Tail : Position := ( 0, 0 );
 
    Tail_Log : Vector := Empty_Vector & Tail;
