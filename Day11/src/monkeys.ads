@@ -6,6 +6,11 @@ package Monkeys is
    
    Parse_Error : Exception;
    
+   procedure Do_Round;
+   function Monkey_Business return Integer;
+   
+private
+   
    type Monkey_Index is range 0 .. 7;
    subtype Worry is Natural;
    package Worry_Vectors is new Ada.Containers.Vectors( Index_Type => Positive, Element_Type => Worry );
@@ -16,7 +21,11 @@ package Monkeys is
       record
          ID : Monkey_Index;
          Items : Worry_Vectors.Vector;
+         Inspection_Count : Natural;
          Operation : Worry_Operation;
+         Operation_Char : Character;
+         Operand_Old : Boolean;
+         Operation_Amt : Worry;
          Test_Divisor : Worry;
          Test_Target : Test_Targets;
       end record;
