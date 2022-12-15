@@ -4,9 +4,9 @@ with Fields;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Containers.Vectors;
 
-procedure Day12 is
+procedure Day12Part2 is
    Cant_Happen : exception;
-
+   
    subtype Path_Length is Natural;
    package Distances_Field is new Fields( Element_Type => Path_Length );
    package Explored_Field is new Fields( Element_Type => Boolean );
@@ -15,7 +15,7 @@ procedure Day12 is
    function Explored ( P : Position ) return Explored_Field.Accessor renames Explored_Field.Field;
    function Previous ( P : Position ) return Previous_Field.Accessor renames Previous_Field.Field;
    package Position_Vectors is new Ada.Containers.Vectors( Index_Type => Positive, Element_Type => Position );
-
+   
    function Shortest_Route_Length ( This_Start : Position ) return Natural is
       Queue : Position_Vectors.Vector := Position_Vectors.Empty_Vector;
       function Dequeue return Position is
@@ -50,10 +50,24 @@ procedure Day12 is
             end loop;
          end;
       end loop;
-
-      raise Cant_Happen;
+   
+      return Path_Length'Last;
    end Shortest_Route_Length;
-
 begin
-   Put_Line( Shortest_Route_Length(Start)'Image );
-end Day12;
+   declare
+      Shortest_Path : Path_Length := Path_Length'Last;
+   begin
+      for Y in Y_Coord loop
+         for X in X_Coord loop
+            declare
+               Pos : Position := ( X, Y );
+            begin
+               if Field_Height(Pos) = 0 then
+                  Shortest_Path := Path_Length'Min( Shortest_Path, Shortest_Route_Length(Pos) );
+               end if;
+            end;
+         end loop;
+      end loop;
+      Put_Line( Shortest_Path'Image );
+   end;
+end Day12Part2;

@@ -11,6 +11,8 @@ package Fields is
    function Field ( X : X_Coord; Y : Y_Coord ) return Accessor;
    function Field ( P : Position ) return Accessor is (Field( P.X, P.Y ));
    
+   procedure Fill_All ( V : Element_Type );
+   
 private
    
    type Accessor ( Element : not null access Element_Type ) is limited null record;

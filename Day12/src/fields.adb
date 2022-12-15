@@ -8,5 +8,10 @@ package body Fields is
    begin
       return ( Element => Data(X,Y)'Access );
    end Field;
+   
+   procedure Fill_All ( V : Element_Type ) is
+   begin
+      Data := ( others => ( others => V ) );
+   end Fill_All;
 
 end Fields;
