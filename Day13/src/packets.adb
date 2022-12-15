@@ -30,6 +30,25 @@ package body Packets is
    
    function All_Packets return Pair_Sequence is (All_Packets_Var);
    
+   function All_Packets return Packet_Sequence is
+      function Recurse ( Accum : Packet_Sequence; Idx : Positive ) return Packet_Sequence is
+         Cumulative : Packet_Sequence := Accum & All_Packets_Var(Idx);
+      begin
+         return (if Idx = All_Packets_Var'Last then Cumulative else Recurse( Cumulative, Idx+1 ));
+      end Recurse;
+      Start : Packet_Sequence( 2..1 );
+   begin
+      return Recurse( Start, All_Packets_Var'First );
+   end All_Packets;
+   
+   function Dividers return Pair is
+      First : Data_Elements.Data_Element_Access := Data_Elements.New_Data("[[2]]");
+      Second : Data_Elements.Data_Element_Access := Data_Elements.New_Data("[[6]]");
+      Both : Pair := ( First, Second );
+   begin
+      return Both;
+   end Dividers;
+   
 begin
    null;
 end Packets;

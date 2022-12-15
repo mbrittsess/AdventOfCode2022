@@ -1,5 +1,8 @@
 project Day13 is
-    for Source_Dirs use ("src");
-    for Object_Dir use "obj";
-    for Main use ("day13.adb");
+
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj";
+   for Main use ("day13part2.adb", "day13.adb");
+
 end Day13;
+
