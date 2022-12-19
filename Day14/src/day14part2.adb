@@ -1,9 +1,10 @@
 with Cave; use Cave;
 with Ada.Text_IO; use Ada.Text_IO;
 
-procedure Day14 is
+procedure Day14Part2 is
    Sand_Count : Natural := 0;
 begin
+   Add_Floor;
    Run_Sand_Simulation;
    for Y in Y_Coord loop
       for X in X_Coord loop
@@ -13,4 +14,4 @@ begin
       end loop;
    end loop;
    Put_Line( Sand_Count'Image );
-end Day14;
+end Day14Part2;
