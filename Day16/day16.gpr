@@ -1,0 +1,5 @@
+project Day16 is
+    for Source_Dirs use ("src");
+    for Object_Dir use "obj";
+    for Main use ("day16.adb");
+end Day16;
