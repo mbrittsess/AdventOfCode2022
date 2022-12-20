@@ -12,8 +12,8 @@ package body Filtering is
       end Recurse;
       Empty : Element_Array( 1 .. 0 );
    begin
-      if A'Length = 1 then
-         return Empty;
+      if A'Length <= 1 then
+         return A;
       else
          return Recurse( Empty, A'First );
       end if;

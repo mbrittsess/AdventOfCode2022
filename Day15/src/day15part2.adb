@@ -39,6 +39,11 @@ procedure Day15Part2 is
       end;
    end Get_Sensor_Range;
    
+   function To_String ( R : Int_Range ) return String is
+   begin
+      return "[" & R.Lo'Image & " .. " & R.Hi'Image & "]";
+   end To_String;
+   
 begin
    for Line_Y in 0 .. Max_Y loop
       declare
@@ -66,6 +71,7 @@ begin
             In_Sensors : Sensor_Sequence := Get_Sensors_In_Range;
             Ret_Arr : Ranges( In_Sensors'Range );
          begin
+            --Put_Line( "Line " & Line_Y'Image & " Sensors In Range Count: " & Integer'Image( In_Sensors'Length ) );
             for Idx in In_Sensors'Range loop
                Ret_Arr(Idx) := Get_Sensor_Range( In_Sensors(Idx), Line_Y );
             end loop;
@@ -77,16 +83,97 @@ begin
             Ret_Arr : Ranges := Get_X_Ranges;
          begin
             Sort( Ret_Arr );
+            --for IR of Ret_Arr loop
+               --Put_Line("  " & To_String(IR) );
+            --end loop;
+            
             return Ret_Arr;
          end Get_Sorted_X_Ranges;
          
          function Get_Collapsed_X_Ranges return Ranges is
             In_Ranges : Ranges := Get_Sorted_X_Ranges;
-            --TODO
+            function Recurse ( Accum : Ranges; Idx : Positive ) return Ranges is
+               Cur : Int_Range := Accum( Accum'Last );
+               Next : Int_Range := In_Ranges(Idx);
+               Does_Overlap : Boolean := (Cur.Lo <= Next.Hi) and then (Next.Lo <= Cur.Hi);
+               Does_Abut : Boolean := (Cur.Hi+1 = Next.Lo) or else (Next.Hi+1 = Cur.Lo);
+            begin
+               if Does_Overlap or else Does_Abut then
+                  declare
+                     Merged_Element : Int_Range := ( Lo => Integer'Min( Cur.Lo, Next.Lo ), Hi => Integer'Max( Cur.Hi, Next.Hi ) );
+                     New_Accum : Ranges := Accum( Accum'First .. Accum'Last-1 ) & Merged_Element;
+                  begin
+                     if Idx = In_Ranges'Last then
+                        return New_Accum;
+                     else
+                        return Recurse( New_Accum, Idx+1 );
+                     end if;
+                  end;
+               else
+                  declare
+                     New_Accum : Ranges := Accum & Next;
+                  begin
+                     if Idx = In_Ranges'Last then
+                        return New_Accum;
+                     else
+                        return Recurse( New_Accum, Idx+1 );
+                     end if;
+                  end;
+               end if;
+            end Recurse;
+         begin
+            if In_Ranges'Length <= 1 then
+               return In_Ranges;
+            else
+               declare
+                  Start_Accum : Ranges := ( 1 => In_Ranges(In_Ranges'First) );
+               begin
+                  return Recurse( Start_Accum, In_Ranges'First+1 );
+               end;
+            end if;
+         end Get_Collapsed_X_Ranges;
+         
+         -- Will eliminate any portion of a range which is entirely outside of bounds
+         function Get_Stripped_Ranges return Ranges is
+            function In_Bounds ( IR : Int_Range ) return Boolean is (0 <= IR.Hi and then IR.Lo <= Max_Y);
+            package Range_Filtering is new Filtering( Element_Type => Int_Range, Element_Array => Ranges, Predicate => In_Bounds );
+            Collapsed_Ranges : Ranges := Get_Collapsed_X_Ranges;
+         begin
+            --Put_Line( "Line " & Line_Y'Image & " Filtered Ranges Count: " & Integer'Image( Collapsed_Ranges'Length ) );
+            --for IR of Collapsed_Ranges loop
+               --Put_Line("  " & To_String(IR) );
+            --end loop;
+            
+            return Range_Filtering.Filter( Collapsed_Ranges );
+         end Get_Stripped_Ranges;
+         
+         -- Will truncate any range which is partially out of bounds to be entirely in bounds
+         function Get_Truncated_Ranges return Ranges is
+            Ret_Arr : Ranges := Get_Stripped_Ranges;
+         begin
+            for Idx in Ret_Arr'Range loop
+               Ret_Arr(Idx) := ( Lo => Integer'Max( 0, Ret_Arr(Idx).Lo ), Hi => Integer'Min( Max_Y, Ret_Arr(Idx).Hi ) );
+            end loop;
+            return Ret_Arr;
+         end Get_Truncated_Ranges;
+         
+         Line_Ranges : Ranges := Get_Truncated_Ranges;
       begin
-         null;
+         if Line_Y mod 2**14 = 0 then
+            Put_Line( "Reached line " & Line_Y'Image );
+         end if;
+         --Put_Line( "Line " & Line_Y'Image & " Truncated Ranges Count: " & Integer'Image( Line_Ranges'Length ) );
+         --for IR of Line_Ranges loop
+            --Put_Line( "  " & To_String(IR) );
+         --end loop;
+         if Line_Ranges'Length = 2 and then (Line_Ranges(2).Lo - Line_Ranges(1).Hi) = 2 then
+            declare
+               Tuning_Frequency : Long_Long_Integer := Long_Long_Integer(Line_Y) + Long_Long_Integer(Line_Ranges(1).Hi+1)*Max_Y;
+            begin
+               Put_Line( "Candidate found at: x=" & Integer'Image(Line_Ranges(1).Hi+1) & ",y=" & Line_Y'Image & ", tuning frequency is " & Tuning_Frequency'Image );
+            end;
+         end if;
       end;
-      
    end loop;
    
 end Day15Part2;

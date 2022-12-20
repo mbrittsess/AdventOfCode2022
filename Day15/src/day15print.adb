@@ -19,6 +19,8 @@ begin
          begin
             if Content = Tunnels.Empty and then Tunnels.Definitely_Not_Beacon(X,Y) then
                Put( '#' );
+            elsif Content = Tunnels.Empty and then X = 0 then
+               Put( '|' );
             else
                Put( Output_Char( Content ) );
             end if;
