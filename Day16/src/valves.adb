@@ -1,4 +1,5 @@
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
+with Ada.Containers.Vectors;
 
 package body Valves is
 
@@ -34,7 +35,7 @@ package body Valves is
          Flow_Rate : Natural := Natural'Value( Line( 24 .. Index( Line, ";", 24 )-1 ) );
          Num_Connections : Positive := Count( Line, "," )+1;
          Connections : Index_Collection( 1 .. Num_Connections );
-         Connections_Start : Positive := (if Flow_Rate < 10 then 50 else 51);
+         Connections_Start : Positive := Index( Line, " ", Index( Line, "valve", 2 ) )+1;
       begin
          for Conn_Idx in 1 .. Num_Connections loop
             declare
@@ -75,5 +76,45 @@ package body Valves is
          raise Index_Error;
       end if;
    end Get_Valve;
+   
+   Distances : array ( Valve_Index, Valve_Index ) of Natural := ( others => ( others => 0 ) );
+   
+   function Time_To_Travel ( From, To : Valve_Index ) return Natural is (Distances(From,To));
+   
+begin
+   -- Fill out the array of distances to each node
+   declare
+      package Index_Vectors is new Ada.Containers.Vectors( Index_Type => Positive, Element_Type => Valve_Index );
+      Queue : Index_Vectors.Vector := Index_Vectors.Empty_Vector;
+      function Dequeue return Valve_Index is
+         Ret : Valve_Index := Queue.First_Element;
+      begin
+         Queue.Delete_First;
+         return Ret;
+      end Dequeue;
+   begin
+      for Start_Idx in Valve_Index loop
+         declare
+            Visited : array ( Valve_Index ) of Boolean := ( others => False );
+         begin
+            Queue.Append( Start_Idx );
+            Visited( Start_Idx ) := True;
+            while not Queue.Is_Empty loop
+               declare
+                  Cur_Idx : Valve_Index := Dequeue;
+                  Cur_Dist : Natural := Distances( Start_Idx, Cur_Idx );
+               begin
+                  for Adj_Idx of Get_Valve(Cur_Idx).Connections loop
+                     if not Visited(Adj_Idx) then
+                        Queue.Append( Adj_Idx );
+                        Visited( Adj_Idx ) := True;
+                        Distances( Start_idx, Adj_Idx ) := Cur_Dist+1;
+                     end if;
+                  end loop;
+               end;
+            end loop;
+         end;
+      end loop;
+   end;
    
 end Valves;

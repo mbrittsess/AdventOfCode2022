@@ -1,6 +1,8 @@
 with Input;
 
 package Valves is
+   
+   pragma Elaborate_Body;
 
    Index_Error : exception;
    
