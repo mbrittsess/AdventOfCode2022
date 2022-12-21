@@ -16,6 +16,33 @@ package body Visiting is
       return Ret;
    end With_Visited;
    
+   function Get_Unvisited ( Log : Node_Log ) return Index_Collection is
+      Ret_Arr : Index_Collection( 1 .. Count_Unvisited( Log ) );
+      Cur_Ret_Idx : Positive := 1;
+   begin
+      for Idx in Valve_Index loop
+         if not Log(Idx) then
+            Ret_Arr( Cur_Ret_Idx ) := Idx;
+            Cur_Ret_Idx := Cur_Ret_Idx + 1;
+         end if;
+      end loop;
+      
+      if Cur_Ret_Idx /= Ret_Arr'Length+1 then
+         raise Cant_Happen;
+      end if;
+      
+      return Ret_Arr;
+   end Get_Unvisited;
+   
+   function Count_Unvisited ( Log : Node_Log ) return Natural is
+      Count : Natural := 0;
+   begin
+      for Visited of Log loop
+         Count := Count + (if Visited then 0 else 1);
+      end loop;
+      return Count;
+   end Count_Unvisited;
+   
    function Max_Pressure_Released ( Start_Idx : Valve_Index ) return Natural is
       function Visit
         (
