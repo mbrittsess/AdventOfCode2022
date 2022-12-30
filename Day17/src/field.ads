@@ -18,10 +18,12 @@ package Field is
    
    function Get_Next_Rock return Rock;
    
+   function Get_Num_Rocks_Spawned return Natural;
+   
    function Content_At ( Row, Column : Positive ) return Content;
    
    function Highest_Level return Natural;
-   procedure Print_Field;
+   procedure Print_Field ( Top_Rows : Positive := 32 );
    
    procedure Add_Rock_To_Field ( R : Rock );
    

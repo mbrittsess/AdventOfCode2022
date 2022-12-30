@@ -21,5 +21,7 @@ package body Jets is
          when '>' => return Right;
       end case;
    end Get_Jet_Direction;
+   
+   function Get_Cur_Index return Natural is (Cur_Input_Index);
 
 end Jets;

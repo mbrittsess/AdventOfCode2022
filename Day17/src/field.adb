@@ -66,10 +66,10 @@ package body Field is
       end if;
    end Highest_Level;
    
-   procedure Print_Field is
+   procedure Print_Field ( Top_Rows : Positive := 32 ) is
       use Ada.Text_IO;
    begin
-      for Row in reverse 1 .. Highest_Level loop
+      for Row in reverse Positive'Max( 1, (Highest_Level-Top_Rows)+1 ) .. Highest_Level loop
          for Col in 1 .. 7 loop
             case Content_At( Row, Col ) is
                when '.' => Put( '.' );
@@ -97,8 +97,12 @@ package body Field is
       end;
    end Set_Content_At;
    
+   Num_Rocks_Spawned : Natural := 0;
+   function Get_Num_Rocks_Spawned return Natural is (Num_Rocks_Spawned);
+   
    function Get_Next_Rock return Rock is
    begin
+      Num_Rocks_Spawned := Num_Rocks_Spawned + 1;
       return
         (
          Pos =>
