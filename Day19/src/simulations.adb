@@ -2,81 +2,83 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body Simulations is
    
-   type Robot_Sequence is array ( Positive range <> ) of Robot_Kind;
-   function "&" ( L : Robot_Sequence; R : Robot_Kind ) return Robot_Sequence is
+   function Compute_Robot_Limits ( Blp : Blueprint ) return Robot_Amount is
    begin
-      return Ret : Robot_Sequence( 1 .. L'Length+1 ) do
-         Ret( 1 .. L'Length ) := L;
-         Ret( Ret'Last ) := R;
+      return Amts : Robot_Amount := ( Geode => Natural'Last, others => <> ) do
+         for Resource in Resource_Kind'(Ore) .. Obsidian loop
+            for Robot in Robot_Kind loop
+               Amts( Robot_Kind(Resource) ) := Natural'Max( Amts( Robot_Kind(Resource) ), Blp(Robot)(Resource) );
+            end loop;
+         end loop;
       end return;
-   end "&";
-
-   function Get_Max_Geodes ( Blp : Blueprint; Time : Natural ) return Natural is
-      
-      Robot_Limits : array ( Robot_Kind ) of Natural := ( Geode => Natural'Last, others => 0 );
-      
-      function Iterate_State ( S : State ) return Natural is
+   end Compute_Robot_Limits;
          
-         function Iterate_State_With_Build ( Robot : Robot_Kind ) return Natural is
-            New_S : State := S;
-         begin
-            New_S.Resources := (New_S.Resources - Blp( Robot )) + Production( New_S.Robots );
-            New_S.Robots( Robot ) := New_S.Robots( Robot ) + 1;
-            New_S.Time := New_S.Time + 1;
-            return Iterate_State( New_S );
-         end Iterate_State_With_Build;
+   function With_One_More ( Amts : Robot_Amount; Robot : Robot_Kind ) return Robot_Amount is
+   begin
+      return New_Amts : Robot_Amount := Amts do
+         New_Amts( Robot ) := New_Amts( Robot ) + 1;
+      end return;
+   end With_One_More;
+      
+   function Get_Max_Geodes ( Blp : Blueprint; Max_Time : Natural ) return Natural is
+      Max_Geodes_Yet : Natural := 0;
+      procedure Update_Max ( G : Natural ) is
+      begin
+         Max_Geodes_Yet := Natural'Max( Max_Geodes_Yet, G );
+      end Update_Max;
+      
+      Robot_Limits : Robot_Amount := Compute_Robot_Limits( Blp );
+   
+      function Max_Potential_Geodes ( S : State ) return Natural is
+      begin
+         return Ret : Natural := S.Resources(Geode) do
+            for N in S.Robots(Geode) .. S.Robots(Geode)+((Max_Time-S.Time)-1) loop
+               Ret := Ret + N;
+            end loop;
+         end return;
+      end Max_Potential_Geodes;
+      
+      procedure Iterate_State ( S : State ) is
+         Time : Natural := S.Time;
          
          function Can_Build_Robot ( Robot : Robot_Kind ) return Boolean is (for all Res in Resource_Kind => Blp(Robot)(Res) <= S.Resources(Res));
          function Should_Build_Robot( Robot : Robot_Kind ) return Boolean is (S.Robots(Robot) < Robot_Limits(Robot));
-         
       begin
-         if S.Time = Time then --We will start at time 0. So after 24 minutes have elapsed, the next minute will start with Time = 24
-            --Put_Line( "Reached time 24, returning with " & Natural'Image( S.Resources(Geode) ) & " geodes" );
-            return S.Resources(Geode);
+         --Put_Line( "Entering time " & S.Time'Image & " with " & Natural'Image( S.Resources(Geode) ) & " geodes and " & Natural'Image( S.Robots(Geode) ) & " geode robots." );
+         if Time = Max_Time then
+            Update_Max( S.Resources(Geode) );
+            return;
+         elsif Max_Potential_Geodes( S ) <= Max_Geodes_Yet then
+            return;
          else
             declare
-               Max_Geodes : Natural := 0;
+               Can_Build_All : Boolean := True;
             begin
-               --Put_Line( "Entering at time " & S.Time'Image & ", trying options" );
-               for Robot in Robot_Kind loop
-                  if Should_Build_Robot( Robot ) and then Can_Build_Robot( Robot ) then
-                     --Put_Line( " Attempting to build " & Robot'Image & " robot" );
-                     Max_Geodes := Natural'Max( Max_Geodes, Iterate_State_With_Build( Robot ) );
-                  end if;
-               end loop;
-               -- Simulate choice of doing nothing
-               if not (for all Robot in Robot_Kind => Should_Build_Robot(Robot) and then Can_Build_Robot(Robot)) then
-                  -- This test is about not needlessly waiting to stockpile resources if we can already build all possible robots
+               -- Try building all available robots, starting with Geode robots to maximize the chance that later branches return early because they can't do better than what's been encountered
+               for Robot in reverse Robot_Kind loop
                   declare
-                     New_S : State := S;
+                     Can_Build_This : Boolean := Can_Build_Robot( Robot );
+                     Should_Build_This : Boolean := Should_Build_Robot( Robot );
                   begin
-                     --Put_Line( "Attempting to build nothing" );
-                     New_S.Resources := New_S.Resources + Production( New_S.Robots );
-                     New_S.Time := New_S.Time + 1;
-                     Max_Geodes := Natural'Max( Max_Geodes, Iterate_State( New_S ) );
+                     if Should_Build_This then
+                        Can_Build_All := Can_Build_All and Can_Build_This;
+                        if Can_Build_This then
+                           Iterate_state( ( Time => Time+1, Resources => (S.Resources + Production( S.Robots )) - Blp(Robot), Robots => With_One_More( S.Robots, Robot ) ) );
+                        end if;
+                     end if;
                   end;
+               end loop;
+               -- If at least one robot should have been built but not enough resources were available, try waiting:
+               if not Can_Build_All then
+                  Iterate_State( ( Time => Time+1, Resources => S.Resources + Production( S.Robots ), Robots => S.Robots ) );
                end if;
-               
-               return Max_Geodes;
+               return;
             end;
          end if;
       end Iterate_State;
-      
-      Start_State : State :=
-        (
-         Time => 0,
-         Resources => ( others => 0 ),
-         Robots => ( Ore => 1, others => 0 )
-        );
    begin
-      -- Compute robot limits
-      for Resource in Resource_Kind'(Ore) .. Obsidian loop
-         for Robot in Robot_Kind loop
-            Robot_Limits( Robot_Kind(Resource) ) := Natural'Max( Robot_Limits( Robot_Kind(Resource) ), Blp(Robot)(Resource) );
-         end loop;
-      end loop;
-            
-      return Iterate_State( Start_State );
+      Iterate_State( ( Time => 0, Resources => ( others => 0 ), Robots => ( Ore => 1, others => 0 ) ) );
+      return Max_Geodes_Yet;
    end Get_Max_Geodes;
-
+   
 end Simulations;

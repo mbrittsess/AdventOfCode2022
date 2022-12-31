@@ -10,6 +10,6 @@ package Simulations is
          Robots : Robot_Amount;
       end record;
    
-   function Get_Max_Geodes ( Blp : Blueprint; Time : Natural ) return Natural;   
+   function Get_Max_Geodes ( Blp : Blueprint; Max_Time : Natural ) return Natural;
 
 end Simulations;
